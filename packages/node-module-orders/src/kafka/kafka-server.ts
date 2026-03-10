@@ -64,8 +64,6 @@ export async function ensureTopicsExist(): Promise<void> {
   }
 }
 
-// ─── Producer ────────────────────────────────────────────────────────────────
-
 export async function connectProducer(): Promise<void> {
   if (producer) return;
 
@@ -160,8 +158,6 @@ export async function publishBatch<T>(
   }
 }
 
-// ─── Consumer ────────────────────────────────────────────────────────────────
-
 export async function createConsumer(groupId: string): Promise<Consumer> {
   if (consumers.has(groupId)) return consumers.get(groupId)!;
 
@@ -202,8 +198,6 @@ export async function disconnectConsumer(groupId: string): Promise<void> {
     );
   }
 }
-
-// ─── Lifecycle ───────────────────────────────────────────────────────────────
 
 export async function connectKafka(): Promise<void> {
   await ensureTopicsExist();

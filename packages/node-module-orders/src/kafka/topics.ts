@@ -5,7 +5,6 @@ export interface TopicConfig {
   configEntries?: { name: string; value: string }[];
 }
 
-// ─── Topic Names ────────────────────────────────────────────────────────────
 export const TOPICS = {
   ORDER_CREATED: "order-created",
   ORDER_UPDATED: "order-updated",
@@ -21,7 +20,7 @@ export const TOPIC_CONFIGS: TopicConfig[] = [
     numPartitions: -1,
     replicationFactor: 1,
     configEntries: [
-      { name: "retention.ms", value: "2592000000" }, // 30 days
+      { name: "retention.ms", value: "2592000000" },
       { name: "cleanup.policy", value: "delete" },
     ],
   },
@@ -43,7 +42,7 @@ export const TOPIC_CONFIGS: TopicConfig[] = [
     numPartitions: 1,
     replicationFactor: 1,
     configEntries: [
-      { name: "retention.ms", value: "2592000000" }, // 30 days
+      { name: "retention.ms", value: "2592000000" },
       { name: "cleanup.policy", value: "delete" },
     ],
   },
