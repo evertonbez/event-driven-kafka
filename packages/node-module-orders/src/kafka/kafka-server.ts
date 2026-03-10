@@ -12,12 +12,10 @@ import logger from "../utils/logger";
 
 const kafkaConfig = config.kafka;
 
-console.log(kafkaConfig);
-
 const kafka = new Kafka({
   clientId: config.name,
   brokers: kafkaConfig.brokers,
-  // connectionTimeout: kafkaConfig.connectionTimeout,
+  connectionTimeout: kafkaConfig.connectionTimeout,
   retry: {
     initialRetryTime: 100,
     retries: kafkaConfig.maxReconnectAttempts,
