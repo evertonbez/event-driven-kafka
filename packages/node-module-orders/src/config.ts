@@ -7,8 +7,8 @@ const serverEnv: ServerEnv =
   (process.env.SERVER_ENV as ServerEnv) || "development";
 
 function getKafkaBrokers(): string[] {
-  const natServers = process.env.KAFKA_BROKERS ?? "kafka1:9092";
-  return natServers.split(",");
+  const brokers = process.env.KAFKA_BROKERS ?? "kafka:9092";
+  return brokers.split(",");
 }
 
 const development = {
@@ -17,11 +17,11 @@ const development = {
   serverEnv,
   isDevelopment: isDeveloment,
   isProduction,
-  routesPrefix: process.env.ROUTES_PREFIX ?? "/api/module-order/",
   port: process.env.PORT ?? 3100,
   mongodb: {
     uri:
-      process.env.MONGODB_URI ?? "mongodb://0.0.0.0:27017/module-order-local",
+      process.env.MONGODB_URI ??
+      "mongodb://admin:admin@localhost:27017/module-order-local?authSource=admin",
   },
   redis: {
     uri: process.env.REDIS_URI ?? "redis://0.0.0.0:6379",

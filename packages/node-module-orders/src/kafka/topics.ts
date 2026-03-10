@@ -6,10 +6,10 @@ export interface TopicConfig {
 }
 
 export const TOPICS = {
-  ORDER_CREATED: "order-created",
-  ORDER_UPDATED: "order-updated",
-  ORDER_CANCELLED: "order-cancelled",
-  ORDER_DEAD_LETTER: "order-dlq",
+  ORDER_CREATED: "order.created",
+  ORDER_UPDATED: "order.updated",
+  ORDER_CANCELLED: "order.cancelled",
+  ORDER_DEAD_LETTER: "order.dlq",
 } as const;
 
 export type TopicName = (typeof TOPICS)[keyof typeof TOPICS];
@@ -36,7 +36,6 @@ export const TOPIC_CONFIGS: TopicConfig[] = [
     replicationFactor: 1,
     configEntries: [{ name: "retention.ms", value: "2592000000" }],
   },
-
   {
     topic: TOPICS.ORDER_DEAD_LETTER,
     numPartitions: 1,

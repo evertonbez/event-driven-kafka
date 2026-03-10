@@ -12,10 +12,12 @@ import logger from "../utils/logger";
 
 const kafkaConfig = config.kafka;
 
+console.log(kafkaConfig);
+
 const kafka = new Kafka({
   clientId: config.name,
   brokers: kafkaConfig.brokers,
-  connectionTimeout: kafkaConfig.connectionTimeout,
+  // connectionTimeout: kafkaConfig.connectionTimeout,
   retry: {
     initialRetryTime: 100,
     retries: kafkaConfig.maxReconnectAttempts,
@@ -24,7 +26,7 @@ const kafka = new Kafka({
 });
 
 const admin = kafka.admin();
-let producer: Producer | null = null;
+let producer: Producer;
 const consumers: Map<string, Consumer> = new Map();
 
 export async function ensureTopicsExist(): Promise<void> {
@@ -80,7 +82,6 @@ export async function connectProducer(): Promise<void> {
     await producer.connect();
     logger.info("[Kafka] Producer connected");
   } catch (err) {
-    producer = null;
     logger.error("[Kafka] Producer failed to connect", err as Error);
     throw err;
   }
@@ -90,7 +91,6 @@ export async function disconnectProducer(): Promise<void> {
   if (!producer) return;
   try {
     await producer.disconnect();
-    producer = null;
     logger.info("[Kafka] Producer disconnected");
   } catch (err) {
     logger.error("[Kafka] Error disconnecting producer", err as Error);
@@ -105,7 +105,7 @@ export async function publishMessage<T>(
   if (!producer) throw new Error("[Kafka] Producer is not connected");
 
   const message = {
-    key: key ?? null,
+    key: key ?? undefined,
     value: JSON.stringify(payload),
     timestamp: Date.now().toString(),
   };
@@ -209,3 +209,5 @@ export async function disconnectKafka(): Promise<void> {
   await Promise.all([...consumers.keys()].map(disconnectConsumer));
   logger.info("[Kafka] All connections closed");
 }
+
+export { producer };
