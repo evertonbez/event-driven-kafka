@@ -12,20 +12,20 @@ function getKafkaBrokers(): string[] {
 }
 
 const development = {
-  name: "module-orders",
+  name: "module-notification",
   nodeEnv,
   serverEnv,
   isDevelopment: isDeveloment,
   isProduction,
-  port: process.env.PORT ?? 3100,
+  port: process.env.PORT ?? 3200,
   mongodb: {
     uri:
       process.env.MONGODB_URI ??
-      "mongodb://admin:admin@localhost:27017/module-order-local?authSource=admin",
+      "mongodb://admin:admin@localhost:27017/module-notification-local?authSource=admin",
   },
   redis: {
     uri: process.env.REDIS_URI ?? "redis://0.0.0.0:6379",
-    prefix: process.env.REDIS_PREFIX ?? "order",
+    prefix: process.env.REDIS_PREFIX ?? "notification",
     timeout: parseInt(process.env.REDIS_TIMEOUT ?? "10000", 32),
     maxRetires: parseInt(process.env.REDIS_MAX_RETRIES ?? "10", 32),
     userCacheTime: parseInt(process.env.REDIS_USER_CACHE_TIME ?? "4000", 32),
