@@ -1,159 +1,81 @@
-# Turborepo starter
+# Event-Driven Kafka Architecture
 
-This Turborepo starter is maintained by the Turborepo core team.
+Este projeto tem como objetivo principal testar e demonstrar na prática os conceitos de **Arquitetura Orientada a Eventos (Event-Driven Architecture)** em sistemas distribuídos, utilizando **Apache Kafka**.
 
-## Using this example
+## 🚀 Sobre o Projeto
 
-Run the following command:
+Em um sistema distribuído moderno, a comunicação assíncrona é fundamental para garantir escalabilidade, resiliência e baixo acoplamento entre serviços. Neste projeto, demonstramos a comunicação entre dois microsserviços distintos:
+- **Module Orders (Módulo de Pedidos)**: Responsável por gerenciar os pedidos e emitir eventos quando um novo pedido é criado.
+- **Module Notification (Módulo de Notificações)**: Consome os eventos gerados pelo módulo de pedidos e processa as notificações de forma assíncrona.
 
-```sh
-npx create-turbo@latest
+A grande vantagem documentada aqui é que ao invés de realizarem chamadas síncronas entre si (como via HTTP/REST) - que podem gerar gargalos de processamento, timeouts, e acoplamento forte - os serviços comunicam-se de forma totalmente reativa através de tópicos de eventos publicados e processados via Kafka.
+
+## 🛠 Tecnologias Utilizadas
+
+O projeto utiliza uma stack moderna para garantir alta performance, resiliência e manutenibilidade:
+
+- **Linguagem & Runtime:** [TypeScript](https://www.typescriptlang.org/) executando sobre o [Bun](https://bun.sh/) (oferecendo alto desempenho desde o boot).
+- **Framework Web:** [Hono](https://hono.dev/) integrado nativamente com Zod e OpenAPI para validação de dados em tempo de execução e documentação de APIs.
+- **Mensageria:** [Apache Kafka 4.2](https://kafka.apache.org/) operando nativamente em KRaft (sem a necessidade de Zookeeper) com a biblioteca `kafkajs`.
+- **Banco de Dados:** [MongoDB](https://www.mongodb.com/) sendo manipulado através do Mongoose.
+- **Monorepo:** Estruturada modular gerenciada por intermédio do [Turborepo](https://turbo.build/).
+- **Infraestrutura Local:** Docker e Docker Compose configurados para o provisionamento rápido e simples do ambiente local de banco y mensageria.
+
+## 🏗 Estrutura do Monorepo
+
+O repositório utiliza workspaces e concentra os microsserviços sob o diretório do Turborepo:
+
+```text
+packages/
+ ├── node-module-orders/         # Microsserviço de Pedidos (API & Publisher)
+ └── node-module-notification/   # Microsserviço de Notificações (Consumidor & API)
 ```
 
-## What's inside?
+## ⚙️ Como Executar Localmente
 
-This Turborepo includes the following packages/apps:
+### 1. Pré-requisitos
+- O runtime de JavaScript [Bun](https://bun.sh/) instalado em sua máquina.
+- [Docker](https://www.docker.com/) e Docker Compose instalados.
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+### 2. Iniciando a Infraestrutura base
+No diretório raiz do projeto, provisione as dependências de banco de dados e mensagens do Apache Kafka via Docker executando:
+```bash
+docker compose up -d
 ```
 
-Without global `turbo`, use your package manager:
+> **Acesso rápido aos serviços infra que estarão no ar:**
+> - **Kafka broker:** `localhost:9092` / `localhost:29092`
+> - **Kafka UI** (Dashboard visual do Kafka): [http://localhost:8080](http://localhost:8080) (Acesse para monitorar os tópicos e fluxo local)
+> - **MongoDB:** `localhost:27017`
 
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+### 3. Instalando e Compilando
+Em seguida, instale as dependências para todos os pacotes simultaneamente e garanta se há algo a compilar. Na raiz:
+```bash
+bun install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
+### 4. Executando as APIs e Serviços
+O Turborepo cuidará de disparar o comando para as demais bibliotecas do monorepo em modo de desenvolvimento, você apenas precisa iniciar com:
+```bash
+bun run dev
 ```
 
-Without global `turbo`:
+Essa linha de comando já irá colocar de pé em segundo plano a API do `module-orders` (na porta **3000**), logo como colocará a escutar os consumidores o serviço respectivo de notificações do `module-notification` (na porta **3200**).
 
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+## 📖 Fluxo Básico de Funcionamento de Exemplo
 
-### Develop
+O modelo demonstra e testa na prática esse formato:
+1. O cliente (usuário ou cliente Frontend) dispara uma chamada a um endpoint HTTP no **Module Orders** criando e efetivando um pedido.
+2. O **Module Orders** cuida do seu domínio mantendo os dados salvos em estado na collection do banco de dados (MongoDB).
+3. Após isso o sistema publica então formalmente e sob segurança o evento real de "Pedido Criado" (_OrderCreated_) no seu tópico alvo de processamento no broker Kafka.
+4. Imediatamente a API resolve dando timeout ou dando sucesso com HTTP-code da devolução ao cliente, **sem gerar esperas ociosas com os provedores de SMTP/e-mails.**
+5. De forma paralela e constante, lá no processo do **Module Notification** que escutava continuamente aos deltas neste tópico assincronamente... recebe a nova carga do pedido emitido e consome processando todas as eventuais regras de aviso de negócios como por exemplo enviando os devidos boletos, emails ou logs, separadamente sem travar ninguém. 
 
-To develop all apps and packages, run the following command:
+## 🧑‍💻 Principais Comandos Disponíveis (Turborepo)
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Aqui está a relação dos atalhos registrados no topo para o root:
 
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- `bun run build` - Roda o script de build paralelamente à todas as dependências do monolíto/monorepo.
+- `bun run dev` - Monitoramento à 'Quente' nos diretórios das APIs localmente.
+- `bun run format` - Executa a lint de padrões de espaços e indentamentos global via Prettier.
+- `bun run check-types` - Exame formal nos tipos das estruturas dos arquivos via transpilação limpa do Typescript.
