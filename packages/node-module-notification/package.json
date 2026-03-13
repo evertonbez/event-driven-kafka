@@ -1,0 +1,21 @@
+{
+  "name": "module-notification",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --watch src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "hono": "^4.12.7",
+    "kafkajs": "^2.2.4",
+    "pino": "^10.3.1",
+    "pino-pretty": "^13.1.3"
+  }
+}
