@@ -37,8 +37,6 @@ const customerSchema = new Schema<ICustomerDocument>(
   },
 );
 
-customerSchema.index({ email: 1 });
-
 customerSchema.statics.findByEmail = function (email: string) {
   return this.findOne({ email });
 };

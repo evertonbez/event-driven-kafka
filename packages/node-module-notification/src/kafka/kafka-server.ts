@@ -208,4 +208,29 @@ export async function disconnectKafka(): Promise<void> {
   logger.info("[Kafka] All connections closed");
 }
 
+const RETRY_INTERVAL_MS = 2000;
+const MAX_ATTEMPTS = 10;
+
+export async function waitForKafkaReady(): Promise<void> {
+  const admin = kafka.admin();
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      await admin.connect();
+      await admin.listTopics(); // valida que o broker está realmente pronto
+      await admin.disconnect();
+
+      logger.info("[Kafka] Broker is ready");
+      return;
+    } catch {
+      logger.warn(
+        `[Kafka] Broker not ready, retrying... (${attempt}/${MAX_ATTEMPTS})`,
+      );
+      await new Promise((res) => setTimeout(res, RETRY_INTERVAL_MS));
+    }
+  }
+
+  throw new Error("[Kafka] Broker did not become ready in time");
+}
+
 export { producer };
