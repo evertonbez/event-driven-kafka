@@ -12,7 +12,7 @@ function getKafkaBrokers(): string[] {
 }
 
 const development = {
-  name: "module-user",
+  name: "module-orders",
   nodeEnv,
   serverEnv,
   isDevelopment: isDeveloment,
