@@ -3,6 +3,8 @@ import { z } from "zod";
 import { orderRepository, OrderStatus } from "./model-order";
 import logger from "../../utils/logger";
 import { publishMessage } from "../../kafka/kafka-server";
+import { customerRepository } from "../customer/model-customer";
+import { Types } from "mongoose";
 
 const createOrderSchema = z.object({
   customerId: z.string().min(1, "customerId is required"),
@@ -36,6 +38,16 @@ export const v1CreateOrder = async (c: Context) => {
 
   const { customerId, items, notes } = parsed.data;
 
+  if (!Types.ObjectId.isValid(customerId)) {
+    return c.json({ success: false, error: "Invalid customerId" }, 400);
+  }
+
+  const customerFound = await customerRepository.findById(customerId);
+
+  if (!customerFound) {
+    return c.json({ success: false, error: "Customer not found" }, 404);
+  }
+
   const totalAmount = items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0,
@@ -63,7 +75,11 @@ export const v1CreateOrder = async (c: Context) => {
         success: true,
         data: {
           id: order.id,
-          customerId: order.customerId,
+          customer: {
+            id: customerFound.id,
+            name: customerFound.name,
+            email: customerFound.email,
+          },
           status: order.status,
           items: order.items,
           totalAmount: order.totalAmount,
